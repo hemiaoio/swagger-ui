@@ -17,11 +17,11 @@
 
             <a href="javascript:;" class="toggle-samples" data-toggle="tooltip" data-placement="left"
                data-original-title title>
-                <span class="text">Show samples</span><span class="circle-icon"></span>
+                <span class="text" data-sw-translate>Show samples</span><span class="circle-icon"></span>
             </a>
 
             {{#if deprecated}}
-                <h4>Warning: Deprecated</h4>
+                <h4 data-sw-translate class="warning">Warning: Deprecated</h4>
             {{/if}}
             {{#if description}}
                 <div class="markdown action-summary">{{{description}}}</div>
@@ -32,7 +32,7 @@
 
                 {{#if parameters}}
                     <h4 data-control data-parm-toggle data-toggle="collapse"
-                        data-target="#parm-{{parentId}}_{{nickname}}">
+                        data-target="#parm-{{parentId}}_{{nickname}}" data-sw-translate>
                         Parameters
                     </h4>
 
@@ -41,15 +41,15 @@
 
                 {{/if}}
 
-                <h4 data-control data-toggle="collapse" data-target="#test-{{parentId}}_{{nickname}}">
+                <h4 data-control data-toggle="collapse" data-target="#test-{{parentId}}_{{nickname}}" data-sw-translate>
                     Test this endpoint
                 </h4>
 
                 <div id="test-{{parentId}}_{{nickname}}">
                     <div class="sandbox_header collapse in" data-content>
-                        <input class="submit btn btn-primary" name="commit" type="submit" value="Try"
-                               data-target="#get_clients-modal-request">
-                        <a href="#" class="response_hider hide" style="display: inline;">Hide Response</a>
+                        <input class="submit btn btn-primary" name="commit" type="submit" value="Try it out!"
+                               data-target="#get_clients-modal-request" data-sw-translate>
+                        <a href="#" class="response_hider hide" style="display: inline;" data-sw-translate>Hide Response</a>
                         <!--small class="curl-copy-message hide" style="display:none;">Copied to clipboard</small-->
                         <!--span class="response_throbber hide" style="display: none;"></span-->
 
@@ -80,7 +80,7 @@
 
                 {{#if responseMessages}}
                     <div style="margin:0;padding:0;display:inline"></div>
-                    <h4 data-control data-toggle="collapse" data-target="#response-{{parentId}}_{{nickname}}">
+                    <h4 data-control data-toggle="collapse"  data-sw-translate data-target="#response-{{parentId}}_{{nickname}}">
                         Response Messages
                     </h4>
 
@@ -118,16 +118,16 @@
                     </div>
                     <div class="modal-body">
                         <div class='response'>
-                            <h5>Request URL</h5>
+                            <h5  data-sw-translate>Request URL</h5>
 
                             <div class='block request_url'></div>
-                            <h5>Response Body</h5>
+                            <h5  data-sw-translate>Response Body</h5>
 
                             <div class='block response_body'></div>
-                            <h5>Response Code</h5>
+                            <h5  data-sw-translate>Response Code</h5>
 
                             <div class='block response_code'></div>
-                            <h5>Response Headers</h5>
+                            <h5  data-sw-translate>Response Headers</h5>
 
                             <div class='block response_headers'></div>
                         </div>

@@ -39,56 +39,56 @@ this["Handlebars"]["templates"]["content_type"] = Handlebars.template({"1":funct
 'use strict';
 
 
-$(function () {
+$(function() {
 
-  // Helper function for vertically aligning DOM elements
-  // http://www.seodenver.com/simple-vertical-align-plugin-for-jquery/
-  $.fn.vAlign = function () {
-    return this.each(function () {
-      var ah = $(this).height();
-      var ph = $(this).parent().height();
-      var mh = (ph - ah) / 2;
-      $(this).css('margin-top', mh);
-    });
-  };
+	// Helper function for vertically aligning DOM elements
+	// http://www.seodenver.com/simple-vertical-align-plugin-for-jquery/
+	$.fn.vAlign = function() {
+		return this.each(function(){
+			var ah = $(this).height();
+			var ph = $(this).parent().height();
+			var mh = (ph - ah) / 2;
+			$(this).css('margin-top', mh);
+		});
+	};
 
-  $.fn.stretchFormtasticInputWidthToParent = function () {
-    return this.each(function () {
-      var p_width = $(this).closest("form").innerWidth();
-      var p_padding = parseInt($(this).closest("form").css('padding-left'), 10) + parseInt($(this).closest('form').css('padding-right'), 10);
-      var this_padding = parseInt($(this).css('padding-left'), 10) + parseInt($(this).css('padding-right'), 10);
-      $(this).css('width', p_width - p_padding - this_padding);
-    });
-  };
+	$.fn.stretchFormtasticInputWidthToParent = function() {
+		return this.each(function(){
+			var p_width = $(this).closest("form").innerWidth();
+			var p_padding = parseInt($(this).closest("form").css('padding-left') ,10) + parseInt($(this).closest('form').css('padding-right'), 10);
+			var this_padding = parseInt($(this).css('padding-left'), 10) + parseInt($(this).css('padding-right'), 10);
+			$(this).css('width', p_width - p_padding - this_padding);
+		});
+	};
 
-  $('form.formtastic li.string input, form.formtastic textarea').stretchFormtasticInputWidthToParent();
+	$('form.formtastic li.string input, form.formtastic textarea').stretchFormtasticInputWidthToParent();
 
-  // Vertically center these paragraphs
-  // Parent may need a min-height for this to work..
-  $('ul.downplayed li div.content p').vAlign();
+	// Vertically center these paragraphs
+	// Parent may need a min-height for this to work..
+	$('ul.downplayed li div.content p').vAlign();
 
-  // When a sandbox form is submitted..
-  $("form.sandbox").submit(function () {
+	// When a sandbox form is submitted..
+	$("form.sandbox").submit(function(){
 
-    var error_free = true;
+		var error_free = true;
 
-    // Cycle through the forms required inputs
-    $(this).find("input.required").each(function () {
+		// Cycle through the forms required inputs
+ 		$(this).find("input.required").each(function() {
 
-      // Remove any existing error styles from the input
-      $(this).removeClass('error');
+			// Remove any existing error styles from the input
+			$(this).removeClass('error');
 
-      // Tack the error style on if the input is empty..
-      if ($(this).val() === '') {
-        $(this).addClass('error');
-        $(this).wiggle();
-        error_free = false;
-      }
+			// Tack the error style on if the input is empty..
+			if ($(this).val() === '') {
+				$(this).addClass('error');
+				$(this).wiggle();
+				error_free = false;
+			}
 
-    });
+		});
 
-    return error_free;
-  });
+		return error_free;
+	});
 
 });
 
@@ -103,48 +103,138 @@ function clippyCopiedCallback() {
 }
 
 // Logging function that accounts for browsers that don't have window.console
-function log() {
+function log(){
   log.history = log.history || [];
   log.history.push(arguments);
-  if (this.console) {
-    console.log(Array.prototype.slice.call(arguments)[0]);
+  if(this.console){
+    console.log( Array.prototype.slice.call(arguments)[0] );
   }
 }
 
 // Handle browsers that do console incorrectly (IE9 and below, see http://stackoverflow.com/a/5539378/7913)
 if (Function.prototype.bind && console && typeof console.log === "object") {
-  [
-    "log", "info", "warn", "error", "assert", "dir", "clear", "profile", "profileEnd"
-  ].forEach(function (method) {
-      console[method] = this.bind(console[method], console);
+    [
+      "log","info","warn","error","assert","dir","clear","profile","profileEnd"
+    ].forEach(function (method) {
+        console[method] = this.bind(console[method], console);
     }, Function.prototype.call);
 }
 
 window.Docs = {
 
-  shebang: function () {
+	shebang: function() {
 
-    // If shebang has an operation nickname in it..
-    // e.g. /docs/#!/words/get_search
-    var fragments = $.param.fragment().split('/');
-    fragments.shift(); // get rid of the bang
+		// If shebang has an operation nickname in it..
+		// e.g. /docs/#!/words/get_search
+		var fragments = $.param.fragment().split('/');
+		fragments.shift(); // get rid of the bang
 
-    switch (fragments.length) {
-      case 1:
-        break;
-      case 2:
-        var target = '#resources_nav [data-resource] [data-endpoint=' + fragments[0] + '_' + fragments[1] + ']',
-          n = $('#swagger_sidebar').find(target),
-          attr = n.attr('data-selected');
+		switch (fragments.length) {
+			case 1:
+        if (fragments[0].length > 0) { // prevent matching "#/"
+          // Expand all operations for the resource and scroll to it
+          var dom_id = 'resource_' + fragments[0];
 
-        if (typeof attr == typeof undefined) {
-          n.trigger("click");
+          Docs.expandEndpointListForResource(fragments[0]);
+          $("#"+dom_id).slideto({highlight: false});
         }
-        break;
-    }
+				break;
+			case 2:
+				// Refer to the endpoint DOM element, e.g. #words_get_search
 
-  }
+        // Expand Resource
+        Docs.expandEndpointListForResource(fragments[0]);
+        $("#"+dom_id).slideto({highlight: false});
 
+            // Expand operation
+            var li_dom_id = fragments.join('_');
+            var li_content_dom_id = li_dom_id + "_content";
+
+
+            Docs.expandOperation($('#'+li_content_dom_id));
+            $('#'+li_dom_id).slideto({highlight: false});
+            break;
+		}
+	},
+
+	toggleEndpointListForResource: function(resource) {
+		var elem = $('li#resource_' + Docs.escapeResourceName(resource) + ' ul.endpoints');
+		if (elem.is(':visible')) {
+			$.bbq.pushState('#/', 2);
+			Docs.collapseEndpointListForResource(resource);
+		} else {
+            $.bbq.pushState('#/' + resource, 2);
+			Docs.expandEndpointListForResource(resource);
+		}
+	},
+
+	// Expand resource
+	expandEndpointListForResource: function(resource) {
+		var resource = Docs.escapeResourceName(resource);
+		if (resource == '') {
+			$('.resource ul.endpoints').slideDown();
+			return;
+		}
+
+		$('li#resource_' + resource).addClass('active');
+
+		var elem = $('li#resource_' + resource + ' ul.endpoints');
+		elem.slideDown();
+	},
+
+	// Collapse resource and mark as explicitly closed
+	collapseEndpointListForResource: function(resource) {
+		var resource = Docs.escapeResourceName(resource);
+		if (resource == '') {
+			$('.resource ul.endpoints').slideUp();
+			return;
+		}
+
+		$('li#resource_' + resource).removeClass('active');
+
+		var elem = $('li#resource_' + resource + ' ul.endpoints');
+		elem.slideUp();
+	},
+
+	expandOperationsForResource: function(resource) {
+		// Make sure the resource container is open..
+		Docs.expandEndpointListForResource(resource);
+
+		if (resource == '') {
+			$('.resource ul.endpoints li.operation div.content').slideDown();
+			return;
+		}
+
+		$('li#resource_' + Docs.escapeResourceName(resource) + ' li.operation div.content').each(function() {
+			Docs.expandOperation($(this));
+		});
+	},
+
+	collapseOperationsForResource: function(resource) {
+		// Make sure the resource container is open..
+		Docs.expandEndpointListForResource(resource);
+
+		if (resource == '') {
+			$('.resource ul.endpoints li.operation div.content').slideUp();
+			return;
+		}
+
+		$('li#resource_' + Docs.escapeResourceName(resource) + ' li.operation div.content').each(function() {
+			Docs.collapseOperation($(this));
+		});
+	},
+
+	escapeResourceName: function(resource) {
+		return resource.replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^`{|}~]/g, "\\$&");
+	},
+
+	expandOperation: function(elem) {
+		elem.slideDown();
+	},
+
+	collapseOperation: function(elem) {
+		elem.slideUp();
+	}
 };
 
 'use strict';
@@ -176,7 +266,7 @@ this["Handlebars"]["templates"]["main"] = Handlebars.template({"1":function(dept
     + escapeExpression(lambda(((stack1 = (depth0 != null ? depth0.info : depth0)) != null ? stack1.version : stack1), depth0))
     + "\n";
 },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-  var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, buffer = "<div id=\"swagger_sidebar\">\n    <div class=\"sticky-nav-placeholder\">\n        <div class=\"sticky-nav\">\n            <div class=\"mobile-nav\">\n                <span class=\"select-label\">API Reference: </span><span data-selected-value></span>\n            </div>\n\n            <div class=\"token-generator hide\">\n                <span data-close class=\"icon-budicon-471\"></span>\n                <label for=\"input-api-token\">Url</label>\n                <input type=\"text\" autocorrect=\"off\" class=\"ui-form-control\" id=\"input_baseUrl\"\n                       placeholder=\"http://example.com/api\">\n\n                <div class=\"scope-selector\">\n                    <label for=\"scopes\">Token</label>\n\n                    <div class=\"area controls\">\n                        <input type=\"text\" autocorrect=\"off\" class=\"ui-form-control\" id=\"input_apiKey\"\n                               placeholder=\"Enter api key or token\">\n                    </div>\n\n                    <div class=\"area cta\">\n                        <div data-add-scope id=\"explore\" class=\"btn\"><span class=\"icon-budicon-519\"></span>\n                        </div>\n                    </div>\n                </div>\n\n            </div>\n            <div data-navigator>\n                <div data-resource=\"\" label=\"Tools\">\n                    <div class=\"item\" data-tg-switch=\"\">Swagger resource <span class=\"status\"></span></div>\n                </div>\n                <div id=\"resources_nav\">\n                </div>\n            </div>\n\n            <p class=\"changes-disclaimer\">\n                <span class='info' id='api_info'>\n";
+  var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, buffer = "<div id=\"swagger_sidebar\">\n    <div class=\"sticky-nav-placeholder\">\n        <div class=\"sticky-nav\">\n            <div class=\"mobile-nav\">\n                <span class=\"select-label\"  data-sw-translate>API Reference: </span><span data-selected-value></span>\n            </div>\n\n            <div class=\"token-generator hide\">\n                <span data-close class=\"icon-budicon-471\"></span>\n                <label for=\"input-api-token\">Url</label>\n                <input type=\"text\" autocorrect=\"off\" class=\"ui-form-control\" id=\"input_baseUrl\"\n                       placeholder=\"http://example.com/api\">\n\n                <div class=\"scope-selector\">\n                    <label for=\"scopes\">Token</label>\n\n                    <div class=\"area controls\">\n                        <input type=\"text\" autocorrect=\"off\" class=\"ui-form-control\" id=\"input_apiKey\"\n                               placeholder=\"Enter api key or token\">\n                    </div>\n\n                    <div class=\"area cta\">\n                        <div data-add-scope id=\"explore\" class=\"btn\"><span class=\"icon-budicon-519\"></span>\n                        </div>\n                    </div>\n                </div>\n\n            </div>\n            <div data-navigator>\n                <div data-resource=\"\" label=\"Tools\">\n                    <div class=\"item\" data-tg-switch=\"\">Swagger resource <span class=\"status\"></span></div>\n                </div>\n                <div id=\"resources_nav\">\n                </div>\n            </div>\n\n            <p class=\"changes-disclaimer\">\n                <span class='info' id='api_info'>\n";
   stack1 = helpers['if'].call(depth0, (depth0 != null ? depth0.info : depth0), {"name":"if","hash":{},"fn":this.program(1, data),"inverse":this.noop,"data":data});
   if (stack1 != null) { buffer += stack1; }
   buffer += "\n                </span>\n\n                <span class='info' id='api_info'>\n";
@@ -192,7 +282,7 @@ this["Handlebars"]["templates"]["main"] = Handlebars.template({"1":function(dept
 this["Handlebars"]["templates"]["operation"] = Handlebars.template({"1":function(depth0,helpers,partials,data) {
   return "deprecated";
   },"3":function(depth0,helpers,partials,data) {
-  return "                <h4>Warning: Deprecated</h4>\n";
+  return "                <h4 data-sw-translate class=\"warning\">Warning: Deprecated</h4>\n";
   },"5":function(depth0,helpers,partials,data) {
   var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, buffer = "                <div class=\"markdown action-summary\">";
   stack1 = ((helper = (helper = helpers.description || (depth0 != null ? depth0.description : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"description","hash":{},"data":data}) : helper));
@@ -204,7 +294,7 @@ this["Handlebars"]["templates"]["operation"] = Handlebars.template({"1":function
     + escapeExpression(((helper = (helper = helpers.parentId || (depth0 != null ? depth0.parentId : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"parentId","hash":{},"data":data}) : helper)))
     + "_"
     + escapeExpression(((helper = (helper = helpers.nickname || (depth0 != null ? depth0.nickname : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"nickname","hash":{},"data":data}) : helper)))
-    + "\">\n                        Parameters\n                    </h4>\n\n                    <div data-content class=\"operation-params collapse in\" id=\"parm-"
+    + "\" data-sw-translate>\n                        Parameters\n                    </h4>\n\n                    <div data-content class=\"operation-params collapse in\" id=\"parm-"
     + escapeExpression(((helper = (helper = helpers.parentId || (depth0 != null ? depth0.parentId : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"parentId","hash":{},"data":data}) : helper)))
     + "_"
     + escapeExpression(((helper = (helper = helpers.nickname || (depth0 != null ? depth0.nickname : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"nickname","hash":{},"data":data}) : helper)))
@@ -229,7 +319,7 @@ this["Handlebars"]["templates"]["operation"] = Handlebars.template({"1":function
   return "                        <div class=\"response-content-type\"/>\n";
   },"18":function(depth0,helpers,partials,data) {
   var helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-  return "                    <div style=\"margin:0;padding:0;display:inline\"></div>\n                    <h4 data-control data-toggle=\"collapse\" data-target=\"#response-"
+  return "                    <div style=\"margin:0;padding:0;display:inline\"></div>\n                    <h4 data-control data-toggle=\"collapse\"  data-sw-translate data-target=\"#response-"
     + escapeExpression(((helper = (helper = helpers.parentId || (depth0 != null ? depth0.parentId : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"parentId","hash":{},"data":data}) : helper)))
     + "_"
     + escapeExpression(((helper = (helper = helpers.nickname || (depth0 != null ? depth0.nickname : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"nickname","hash":{},"data":data}) : helper)))
@@ -262,7 +352,7 @@ this["Handlebars"]["templates"]["operation"] = Handlebars.template({"1":function
   if (stack1 != null) { buffer += stack1; }
   buffer += "\">"
     + escapeExpression(((helper = (helper = helpers.path || (depth0 != null ? depth0.path : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"path","hash":{},"data":data}) : helper)))
-    + "</a>\n                    </span>\n                </h3>\n            </div>\n\n            <a href=\"javascript:;\" class=\"toggle-samples\" data-toggle=\"tooltip\" data-placement=\"left\"\n               data-original-title title>\n                <span class=\"text\">Show samples</span><span class=\"circle-icon\"></span>\n            </a>\n\n";
+    + "</a>\n                    </span>\n                </h3>\n            </div>\n\n            <a href=\"javascript:;\" class=\"toggle-samples\" data-toggle=\"tooltip\" data-placement=\"left\"\n               data-original-title title>\n                <span class=\"text\" data-sw-translate>Show samples</span><span class=\"circle-icon\"></span>\n            </a>\n\n";
   stack1 = helpers['if'].call(depth0, (depth0 != null ? depth0.deprecated : depth0), {"name":"if","hash":{},"fn":this.program(3, data),"inverse":this.noop,"data":data});
   if (stack1 != null) { buffer += stack1; }
   stack1 = helpers['if'].call(depth0, (depth0 != null ? depth0.description : depth0), {"name":"if","hash":{},"fn":this.program(5, data),"inverse":this.noop,"data":data});
@@ -274,11 +364,11 @@ this["Handlebars"]["templates"]["operation"] = Handlebars.template({"1":function
     + escapeExpression(((helper = (helper = helpers.parentId || (depth0 != null ? depth0.parentId : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"parentId","hash":{},"data":data}) : helper)))
     + "_"
     + escapeExpression(((helper = (helper = helpers.nickname || (depth0 != null ? depth0.nickname : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"nickname","hash":{},"data":data}) : helper)))
-    + "\">\n                    Test this endpoint\n                </h4>\n\n                <div id=\"test-"
+    + "\" data-sw-translate>\n                    Test this endpoint\n                </h4>\n\n                <div id=\"test-"
     + escapeExpression(((helper = (helper = helpers.parentId || (depth0 != null ? depth0.parentId : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"parentId","hash":{},"data":data}) : helper)))
     + "_"
     + escapeExpression(((helper = (helper = helpers.nickname || (depth0 != null ? depth0.nickname : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"nickname","hash":{},"data":data}) : helper)))
-    + "\">\n                    <div class=\"sandbox_header collapse in\" data-content>\n                        <input class=\"submit btn btn-primary\" name=\"commit\" type=\"submit\" value=\"Try\"\n                               data-target=\"#get_clients-modal-request\">\n                        <a href=\"#\" class=\"response_hider hide\" style=\"display: inline;\">Hide Response</a>\n                        <!--small class=\"curl-copy-message hide\" style=\"display:none;\">Copied to clipboard</small-->\n                        <!--span class=\"response_throbber hide\" style=\"display: none;\"></span-->\n\n";
+    + "\">\n                    <div class=\"sandbox_header collapse in\" data-content>\n                        <input class=\"submit btn btn-primary\" name=\"commit\" type=\"submit\" value=\"Try it out!\"\n                               data-target=\"#get_clients-modal-request\" data-sw-translate>\n                        <a href=\"#\" class=\"response_hider hide\" style=\"display: inline;\" data-sw-translate>Hide Response</a>\n                        <!--small class=\"curl-copy-message hide\" style=\"display:none;\">Copied to clipboard</small-->\n                        <!--span class=\"response_throbber hide\" style=\"display: none;\"></span-->\n\n";
   stack1 = ((helper = (helper = helpers.oauth || (depth0 != null ? depth0.oauth : depth0)) != null ? helper : helperMissing),(options={"name":"oauth","hash":{},"fn":this.program(9, data),"inverse":this.noop,"data":data}),(typeof helper === functionType ? helper.call(depth0, options) : helper));
   if (!helpers.oauth) { stack1 = blockHelperMissing.call(depth0, stack1, options); }
   if (stack1 != null) { buffer += stack1; }
@@ -303,7 +393,7 @@ this["Handlebars"]["templates"]["operation"] = Handlebars.template({"1":function
     + escapeExpression(((helper = (helper = helpers.summary || (depth0 != null ? depth0.summary : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"summary","hash":{},"data":data}) : helper)))
     + "\n                            <span class=\"http_method\">\n                                <span class=\"text\">\n                                    "
     + escapeExpression(((helper = (helper = helpers.method || (depth0 != null ? depth0.method : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"method","hash":{},"data":data}) : helper)))
-    + "\n                                </span>\n                            </span>\n                        </h3>\n                    </div>\n                    <div class=\"modal-body\">\n                        <div class='response'>\n                            <h5>Request URL</h5>\n\n                            <div class='block request_url'></div>\n                            <h5>Response Body</h5>\n\n                            <div class='block response_body'></div>\n                            <h5>Response Code</h5>\n\n                            <div class='block response_code'></div>\n                            <h5>Response Headers</h5>\n\n                            <div class='block response_headers'></div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </li>\n</ul>";
+    + "\n                                </span>\n                            </span>\n                        </h3>\n                    </div>\n                    <div class=\"modal-body\">\n                        <div class='response'>\n                            <h5  data-sw-translate>Request URL</h5>\n\n                            <div class='block request_url'></div>\n                            <h5  data-sw-translate>Response Body</h5>\n\n                            <div class='block response_body'></div>\n                            <h5  data-sw-translate>Response Code</h5>\n\n                            <div class='block response_code'></div>\n                            <h5  data-sw-translate>Response Headers</h5>\n\n                            <div class='block response_headers'></div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </li>\n</ul>";
 },"useData":true});
 this["Handlebars"]["templates"]["param_list"] = Handlebars.template({"1":function(depth0,helpers,partials,data) {
   return " multiple='multiple'";
@@ -639,7 +729,7 @@ this["Handlebars"]["templates"]["parameter_content_type"] = Handlebars.template(
 },"4":function(depth0,helpers,partials,data) {
   return "            <option value=\"application/json\">application/json</option>\n";
   },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-  var stack1, buffer = "<div>\n    <label for=\"parameterContentType\">Content type:</label>\n    <select class=\"parameter ui-form-control\" name=\"parameterContentType\">\n";
+  var stack1, buffer = "<div>\n    <label for=\"parameterContentType\"  data-sw-translate>Content type:</label>\n    <select class=\"parameter ui-form-control\" name=\"parameterContentType\">\n";
   stack1 = helpers['if'].call(depth0, (depth0 != null ? depth0.consumes : depth0), {"name":"if","hash":{},"fn":this.program(1, data),"inverse":this.program(4, data),"data":data});
   if (stack1 != null) { buffer += stack1; }
   return buffer + "    </select>\n</div>\n";
@@ -666,7 +756,7 @@ this["Handlebars"]["templates"]["response_content_type"] = Handlebars.template({
 },"4":function(depth0,helpers,partials,data) {
   return "                    <option value=\"application/json\">application/json</option>\n";
   },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-  var stack1, buffer = "<div class=\"parameter-item\">\n    <div class=\"param-property hide\" data-label=\"name\">Response Type</div>\n    <div class=\"param-property\" data-label=\"Response Type\">\n        <div>\n            <select class=\"parameter ui-form-control\" name=\"responseContentType\">\n";
+  var stack1, buffer = "<div class=\"parameter-item\">\n    <div class=\"param-property hide\" data-label=\"name\"  data-sw-translate>Response Type</div>\n    <div class=\"param-property\" data-label=\"Response Type\">\n        <div>\n            <select class=\"parameter ui-form-control\" name=\"responseContentType\">\n";
   stack1 = helpers['if'].call(depth0, (depth0 != null ? depth0.produces : depth0), {"name":"if","hash":{},"fn":this.program(1, data),"inverse":this.program(4, data),"data":data});
   if (stack1 != null) { buffer += stack1; }
   return buffer + "            </select>\n        </div>\n    </div>\n</div>\n\n";
@@ -682,7 +772,7 @@ this["Handlebars"]["templates"]["sidebar_item"] = Handlebars.template({"compiler
 this["Handlebars"]["templates"]["signature"] = Handlebars.template({"1":function(depth0,helpers,partials,data) {
   var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, buffer = "    <h4 class=\"schema-title collapsed\" data-control data-toggle=\"collapse\"\n        data-target=\"#schema-"
     + escapeExpression(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"id","hash":{},"data":data}) : helper)))
-    + "\">"
+    + "\"  data-sw-translate>"
     + escapeExpression(((helper = (helper = helpers.type || (depth0 != null ? depth0.type : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"type","hash":{},"data":data}) : helper)))
     + " Schema</h4>\n    <div data-content class=\"collapse\" id=\"schema-"
     + escapeExpression(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"id","hash":{},"data":data}) : helper)))
@@ -693,7 +783,7 @@ this["Handlebars"]["templates"]["signature"] = Handlebars.template({"1":function
 },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
   var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, buffer = "<h4 class=\"sample-title\" data-control data-toggle=\"collapse\"\n    data-target=\"#sample-"
     + escapeExpression(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"id","hash":{},"data":data}) : helper)))
-    + "\">"
+    + "\" data-sw-translate>"
     + escapeExpression(((helper = (helper = helpers.type || (depth0 != null ? depth0.type : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"type","hash":{},"data":data}) : helper)))
     + " Sample</h4>\n<div data-content class=\"collapse in\" id=\"sample-"
     + escapeExpression(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"id","hash":{},"data":data}) : helper)))
@@ -21207,266 +21297,259 @@ SwaggerUi.Views.HeaderView = Backbone.View.extend({
 
 SwaggerUi.Views.MainView = Backbone.View.extend({
 
-  events: {
-    'click .mobile-nav, [data-navigator]': 'clickSidebarNav',
-    'click [data-resource]': 'clickResource',
-    'click [data-tg-switch]': 'toggleToken',
-    'click [data-close]': 'closeToken',
-    'click #explore' : 'showCustom'
-  },
-
-  apisSorter: {
-    alpha: function (a, b) {
-      return a.name.localeCompare(b.name);
-    }
-  },
-  operationsSorters: {
-    alpha: function (a, b) {
-      return a.path.localeCompare(b.path);
+    events: {
+        'click .mobile-nav, [data-navigator]': 'clickSidebarNav',
+        'click [data-resource]': 'clickResource',
+        'click [data-tg-switch]': 'toggleToken',
+        'click [data-close]': 'closeToken',
+        'click #explore': 'showCustom'
     },
-    method: function (a, b) {
-      return a.method.localeCompare(b.method);
-    }
-  },
-  initialize: function (opts) {
-    var sorterOption, sorterFn, key, value;
-    opts = opts || {};
 
-    this.router = opts.router;
-
-    // Sort APIs
-    if (opts.swaggerOptions.apisSorter) {
-      sorterOption = opts.swaggerOptions.apisSorter;
-      if (_.isFunction(sorterOption)) {
-        sorterFn = sorterOption;
-      } else {
-        sorterFn = this.apisSorter[sorterOption];
-      }
-      if (_.isFunction(sorterFn)) {
-        this.model.apisArray.sort(sorterFn);
-      }
-    }
-    // Sort operations of each API
-    if (opts.swaggerOptions.operationsSorter) {
-      sorterOption = opts.swaggerOptions.operationsSorter;
-      if (_.isFunction(sorterOption)) {
-        sorterFn = sorterOption;
-      } else {
-        sorterFn = this.operationsSorters[sorterOption];
-      }
-      if (_.isFunction(sorterFn)) {
-        for (key in this.model.apisArray) {
-          this.model.apisArray[key].operationsArray.sort(sorterFn);
+    apisSorter: {
+        alpha: function(a, b) {
+            return a.name.localeCompare(b.name);
         }
-      }
-    }
+    },
+    operationsSorters: {
+        alpha: function(a, b) {
+            return a.path.localeCompare(b.path);
+        },
+        method: function(a, b) {
+            return a.method.localeCompare(b.method);
+        }
+    },
+    initialize: function(opts) {
+        var sorterOption, sorterFn, key, value;
+        opts = opts || {};
 
-    // set up the UI for input
-    this.model.auths = [];
+        this.router = opts.router;
 
-    for (key in this.model.securityDefinitions) {
-      value = this.model.securityDefinitions[key];
-
-      this.model.auths.push({
-        name: key,
-        type: value.type,
-        value: value
-      });
-    }
-
-    if (this.model.swaggerVersion === '2.0') {
-      if ('validatorUrl' in opts.swaggerOptions) {
-
-        // Validator URL specified explicitly
-        this.model.validatorUrl = opts.swaggerOptions.validatorUrl;
-
-      } else if (this.model.url.indexOf('localhost') > 0) {
-
-        // Localhost override
-        this.model.validatorUrl = null;
-
-      } else {
-
-        // Default validator
-        this.model.validatorUrl = window.location.protocol + '//online.swagger.io/validator';
-      }
-    }
-    // JSonEditor requires type='object' to be present on defined types, we add it if it's missing
-    // is there any valid case were it should not be added ?
-    var def;
-    for(def in this.model.definitions){
-      if (!this.model.definitions[def].type){
-        this.model.definitions[def].type = 'object';
-      }
-    }
-  },
-
-  render: function () {
-    if (this.model.securityDefinitions) {
-      for (var name in this.model.securityDefinitions) {
-        var auth = this.model.securityDefinitions[name];
-        var button;
-
-        if (auth.type === 'apiKey' && $('#apikey_button').length === 0) {
-          button = new SwaggerUi.Views.ApiKeyButton({model: auth, router: this.router}).render().el;
-          $('.auth_main_container').append(button);
+        // Sort APIs
+        if (opts.swaggerOptions.apisSorter) {
+            sorterOption = opts.swaggerOptions.apisSorter;
+            if (_.isFunction(sorterOption)) {
+                sorterFn = sorterOption;
+            } else {
+                sorterFn = this.apisSorter[sorterOption];
+            }
+            if (_.isFunction(sorterFn)) {
+                this.model.apisArray.sort(sorterFn);
+            }
+        }
+        // Sort operations of each API
+        if (opts.swaggerOptions.operationsSorter) {
+            sorterOption = opts.swaggerOptions.operationsSorter;
+            if (_.isFunction(sorterOption)) {
+                sorterFn = sorterOption;
+            } else {
+                sorterFn = this.operationsSorters[sorterOption];
+            }
+            if (_.isFunction(sorterFn)) {
+                for (key in this.model.apisArray) {
+                    this.model.apisArray[key].operationsArray.sort(sorterFn);
+                }
+            }
         }
 
-        if (auth.type === 'basicAuth' && $('#basic_auth_button').length === 0) {
-          button = new SwaggerUi.Views.BasicAuthButton({model: auth, router: this.router}).render().el;
-          $('.auth_main_container').append(button);
+        // set up the UI for input
+        this.model.auths = [];
+
+        for (key in this.model.securityDefinitions) {
+            value = this.model.securityDefinitions[key];
+
+            this.model.auths.push({
+                name: key,
+                type: value.type,
+                value: value
+            });
         }
-      }
+
+        if (this.model.swaggerVersion === '2.0') {
+            if ('validatorUrl' in opts.swaggerOptions) {
+
+                // Validator URL specified explicitly
+                this.model.validatorUrl = opts.swaggerOptions.validatorUrl;
+
+            } else if (this.model.url.indexOf('localhost') > 0) {
+
+                // Localhost override
+                this.model.validatorUrl = null;
+
+            } else {
+
+                // Default validator
+                this.model.validatorUrl = window.location.protocol + '//online.swagger.io/validator';
+            }
+        }
+        // JSonEditor requires type='object' to be present on defined types, we add it if it's missing
+        // is there any valid case were it should not be added ?
+        var def;
+        for (def in this.model.definitions) {
+            if (!this.model.definitions[def].type) {
+                this.model.definitions[def].type = 'object';
+            }
+        }
+    },
+
+    render: function() {
+        if (this.model.securityDefinitions) {
+            for (var name in this.model.securityDefinitions) {
+                var auth = this.model.securityDefinitions[name];
+                var button;
+
+                if (auth.type === 'apiKey' && $('#apikey_button').length === 0) {
+                    button = new SwaggerUi.Views.ApiKeyButton({ model: auth, router: this.router }).render().el;
+                    $('.auth_main_container').append(button);
+                }
+
+                if (auth.type === 'basicAuth' && $('#basic_auth_button').length === 0) {
+                    button = new SwaggerUi.Views.BasicAuthButton({ model: auth, router: this.router }).render().el;
+                    $('.auth_main_container').append(button);
+                }
+            }
+        }
+
+        // Render the outer container for resources
+        $(this.el).html(Handlebars.templates.main(this.model));
+
+        // Render each resource
+
+        var resources = {};
+        var counter = 0;
+        for (var i = 0; i < this.model.apisArray.length; i++) {
+            var resource = this.model.apisArray[i];
+            var id = resource.name;
+            while (typeof resources[id] !== 'undefined') {
+                id = id + '_' + counter;
+                counter += 1;
+            }
+            resource.id = id;
+            resources[id] = resource;
+            resource.nmbr = i;
+
+            this.addResource(resource, this.model.auths);
+            this.addSidebarHeader(resource, i);
+        }
+
+        $('.propWrap').hover(function onHover() {
+            $('.optionsWrapper', $(this)).show();
+        }, function offhover() {
+            $('.optionsWrapper', $(this)).hide();
+        });
+
+        if (window.location.hash.length === 0) {
+            var n = $(this.el).find("#resources_nav [data-resource]").first();
+            n.trigger("click");
+            $(window).scrollTop(0)
+        }
+
+        return this;
+    },
+
+    addResource: function(resource, auths) {
+        // Render a resource and add it to resources li
+        resource.id = resource.id.replace(/\s/g, '_').replace(/\\/g, '_');
+        // Make all definitions available at the root of the resource so that they can
+        // be loaded by the JSonEditor
+        resource.definitions = this.model.definitions;
+        var resourceView = new SwaggerUi.Views.ResourceView({
+            model: resource,
+            router: this.router,
+            tagName: 'li',
+            id: 'resource_' + resource.id,
+            className: 'resource',
+            auths: auths,
+            swaggerOptions: this.options.swaggerOptions
+        });
+        $('#resources').append(resourceView.render().el);
+    },
+
+    addSidebarToken: function(resource, i) {
+        resource.id = resource.id.replace(/\s/g, '_').replace(/\\/g, '_');
+        var sidebarView = new SwaggerUi.Views.SidebarHeaderView({
+            model: resource,
+            tagName: 'div',
+            className: function() {
+                return i == 0 ? 'active' : '';
+            },
+            attributes: {
+                "data-resource": 'resource_' + resource.name,
+                "label": resource.name
+            },
+            router: this.router,
+            swaggerOptions: this.options.swaggerOptions
+        });
+        $('#token-generator', $(this.el)).append(sidebarView.render().el);
+    },
+
+
+    addSidebarHeader: function(resource, i) {
+        resource.id = resource.id.replace(/\s/g, '_').replace(/\\/g, '_');
+        var sidebarView = new SwaggerUi.Views.SidebarHeaderView({
+            model: resource,
+            tagName: 'div',
+            className: function() {
+                return i == 0 ? 'active' : '';
+            },
+            attributes: {
+                "data-resource": 'resource_' + resource.name,
+                "label": resource.name + "    " + (resource.description || ""),
+            },
+            router: this.router,
+            swaggerOptions: this.options.swaggerOptions
+        });
+        $('#resources_nav', $(this.el)).append(sidebarView.render().el);
+    },
+
+    clear: function() {
+        $(this.el).html('');
+    },
+
+    clickSidebarNav: function(e) {
+        $('.sticky-nav').toggleClass("nav-open")
+    },
+
+    clickResource: function(e) {
+        $(e.target).toggleClass("active");
+    },
+
+    toggleToken: function(e) {
+        var t = $(".token-generator"),
+            tg = $("[data-tg-switch]");
+
+        t.toggleClass("hide");
+        t.hasClass("hide") ? tg.removeClass("active") : tg.addClass("active");
+        t.parents(".sticky-nav").trigger("mobile_nav:update")
+    },
+
+    closeToken: function(e) {
+        var t = $(".token-generator"),
+            tg = $("[data-tg-switch]");
+
+        t.addClass("hide");
+        tg.removeClass("active");
+        t.parents(".sticky-nav").trigger("mobile_nav:update")
+    },
+
+    openToken: function(e) {
+        var t = $(".token-generator"),
+            tg = $("[data-tg-switch]");
+
+        t.removeClass("hide");
+        tg.removeClass("active");
+        t.parents(".sticky-nav").trigger("mobile_nav:update")
+    },
+
+    showCustom: function(e) {
+        if (e) {
+            e.preventDefault();
+        }
+        this.trigger('update-swagger-ui', {
+            url: $('#input_baseUrl').val(),
+            apiKey: $('#input_apiKey').val()
+        });
     }
-
-    // Render the outer container for resources
-    $(this.el).html(Handlebars.templates.main(this.model));
-
-    // Render each resource
-
-    var resources = {};
-    var counter = 0;
-    for (var i = 0; i < this.model.apisArray.length; i++) {
-      var resource = this.model.apisArray[i];
-      var id = resource.name;
-      while (typeof resources[id] !== 'undefined') {
-        id = id + '_' + counter;
-        counter += 1;
-      }
-      resource.id = id;
-      resources[id] = resource;
-      resource.nmbr = i;
-
-      this.addResource(resource, this.model.auths);
-      this.addSidebarHeader(resource, i);
-    }
-
-    $('.propWrap').hover(function onHover() {
-      $('.optionsWrapper', $(this)).show();
-    }, function offhover() {
-      $('.optionsWrapper', $(this)).hide();
-    });
-
-    if (window.location.hash.length === 0 ) {
-      var n = $(this.el).find("#resources_nav [data-resource]").first();
-      n.trigger("click");
-      $(window).scrollTop(0)
-    }
-
-    return this;
-  },
-
-  addResource: function (resource, auths) {
-    // Render a resource and add it to resources li
-    resource.id = resource.id.replace(/\s/g, '_');
-
-    // Make all definitions available at the root of the resource so that they can
-    // be loaded by the JSonEditor
-    resource.definitions = this.model.definitions;
-    var resourceView = new SwaggerUi.Views.ResourceView({
-      model: resource,
-      router: this.router,
-      tagName: 'li',
-      id: 'resource_' + resource.id,
-      className: 'resource',
-      auths: auths,
-      swaggerOptions: this.options.swaggerOptions
-    });
-    $('#resources').append(resourceView.render().el);
-  },
-
-  addSidebarToken: function (resource, i) {
-    resource.id = resource.id.replace(/\s/g, '_');
-    var sidebarView = new SwaggerUi.Views.SidebarHeaderView({
-      model: resource,
-      tagName: 'div',
-      className: function () {
-        return i == 0 ? 'active' : ''
-      },
-      attributes: {
-        "data-resource": 'resource_' + resource.name,
-        "label": resource.name
-      },
-      router: this.router,
-      swaggerOptions: this.options.swaggerOptions
-    });
-    $('#token-generator', $(this.el)).append(sidebarView.render().el);
-  },
-
-
-  addSidebarHeader: function (resource, i) {
-    resource.id = resource.id.replace(/\s/g, '_');
-    var sidebarView = new SwaggerUi.Views.SidebarHeaderView({
-      model: resource,
-      tagName: 'div',
-      className: function () {
-        return i == 0 ? 'active' : ''
-      },
-      attributes: {
-        "data-resource": 'resource_' + resource.name,
-        "label": resource.name
-      },
-      router: this.router,
-      swaggerOptions: this.options.swaggerOptions
-    });
-    $('#resources_nav', $(this.el)).append(sidebarView.render().el);
-  },
-
-  clear: function () {
-    $(this.el).html('');
-  },
-
-  clickSidebarNav: function (e) {
-    $('.sticky-nav').toggleClass("nav-open")
-  },
-
-  clickResource: function (e) {
-    if (!$(e.target).is(".item")) {
-      var n = $(e.target).find(".item").first();
-      $('.sticky-nav').find("[data-resource].active").removeClass("active");
-      $(e.target).find("[data-resource]").first().addClass("active");
-      n.trigger("click")
-    }
-  },
-
-  toggleToken: function (e) {
-    var t = $(".token-generator"),
-      tg = $("[data-tg-switch]");
-
-    t.toggleClass("hide");
-    t.hasClass("hide") ? tg.removeClass("active") : tg.addClass("active");
-    t.parents(".sticky-nav").trigger("mobile_nav:update")
-  },
-
-  closeToken: function (e) {
-    var t = $(".token-generator"),
-      tg = $("[data-tg-switch]");
-
-    t.addClass("hide");
-    tg.removeClass("active");
-    t.parents(".sticky-nav").trigger("mobile_nav:update")
-  },
-
-  openToken: function (e) {
-    var t = $(".token-generator"),
-      tg = $("[data-tg-switch]");
-
-    t.removeClass("hide");
-    tg.removeClass("active");
-    t.parents(".sticky-nav").trigger("mobile_nav:update")
-  },
-
-  showCustom: function(e){
-    if (e) {
-      e.preventDefault();
-    }
-    this.trigger('update-swagger-ui', {
-      url: $('#input_baseUrl').val(),
-      apiKey: $('#input_apiKey').val()
-    });
-  }
 });
-
 'use strict';
 
 SwaggerUi.Views.OperationView = Backbone.View.extend({
@@ -22478,92 +22561,92 @@ SwaggerUi.Views.ResponseContentTypeView = Backbone.View.extend({
 'use strict';
 
 SwaggerUi.Views.SidebarHeaderView = Backbone.View.extend({
-  initialize: function (opts) {
-    this.options = opts || {};
-    this.router = this.options.router;
-  },
+    initialize: function(opts) {
+        this.options = opts || {};
+        this.router = this.options.router;
+    },
 
-  events: {
-    'click [data-endpoint]': 'clickSidebarItem'
-  },
+    events: {
+        'click [data-endpoint]': 'clickSidebarItem'
+    },
 
-  render: function () {
-    $(this.el).html(Handlebars.templates.sidebar_header(this.model));
+    render: function() {
+        $(this.el).html(Handlebars.templates.sidebar_header(this.model));
 
-    for (var i = 0; i < this.model.operationsArray.length; i++) {
-      var item = this.model.operationsArray[i].operation;
-      item.nickname = this.model.operationsArray[i].nickname;
-      item.parentId = this.model.operation.parentId;
-      this.addSidebarItem(item, i);
+        for (var i = 0; i < this.model.operationsArray.length; i++) {
+            var item = this.model.operationsArray[i].operation;
+            item.nickname = this.model.operationsArray[i].nickname;
+            item.parentId = this.model.operation.parentId;
+            this.addSidebarItem(item, i);
+        }
+
+        return this;
+    },
+
+    addSidebarItem: function(item, i) {
+        var sidebarItemView = new SwaggerUi.Views.SidebarItemView({
+            model: item,
+            tagName: 'div',
+            className: 'item ' + (item.deprecated ? "deprecated" : ""),
+            attributes: {
+                "data-endpoint": item.parentId + '_' + item.nickname
+            },
+            router: this.router,
+            swaggerOptions: this.options.swaggerOptions
+        });
+        $(this.el).append(sidebarItemView.render().el);
+    },
+
+    clickSidebarItem: function(e) {
+        var elem = $(e.target);
+        var eln = $("#" + elem.attr("data-endpoint"));
+
+        if (elem.is(".item")) {
+            scroll(elem.attr("data-endpoint"));
+            setSelected(elem);
+            updateUrl(eln.find(".path a").first().attr("href"))
+        }
+
+        /* scroll */
+        function scroll(elem) {
+            var i = $(".sticky-nav").outerHeight();
+            var r = $("#" + elem).offset().top - i - 10;
+            matchMedia() && (r = $("#" + elem).offset().top - 10);
+            scrollT(r)
+        }
+
+        /set selected value and select operation (class) */
+
+        function setSelected(element) {
+            {
+                var nav = $(".sticky-nav [data-navigator]");
+                $("#" + element.attr("data-endpoint"))
+            }
+            nav.find("[data-resource]").removeClass("active");
+            nav.find("[data-selected]").removeAttr("data-selected");
+            element.closest("[data-resource]").addClass("active");
+            element.attr("data-selected", "");
+            $(".sticky-nav").find("[data-selected-value]").html(element.text())
+        }
+
+        /* update navigation */
+        function updateUrl(element) {
+            history.pushState && history.pushState(null, null, element)
+        }
+
+        function matchMedia() {
+            return window.matchMedia("(min-width: 992px)").matches
+        }
+
+        function scrollT(e) {
+            if ("self" === e) {
+                var n = $(window).scrollTop();
+                return $(window).scrollTop(n)
+            }
+
+            return $(window).scrollTop(e)
+        }
     }
-
-    return this;
-  },
-
-  addSidebarItem: function (item, i) {
-    var sidebarItemView = new SwaggerUi.Views.SidebarItemView({
-      model: item,
-      tagName: 'div',
-      className : 'item',
-      attributes: {
-          "data-endpoint": item.parentId + '_' + item.nickname
-      },
-      router: this.router,
-      swaggerOptions: this.options.swaggerOptions
-    });
-    $(this.el).append(sidebarItemView.render().el);
-  },
-
-  clickSidebarItem: function (e) {
-
-    var elem = $(e.target);
-    var eln = $("#" + elem.attr("data-endpoint"));
-
-    if (elem.is(".item")) {
-      scroll(elem.attr("data-endpoint"));
-      setSelected(elem);
-      updateUrl(eln.find(".path a").first().attr("href"))
-    }
-
-    /* scroll */
-    function scroll(elem) {
-      var i = $(".sticky-nav").outerHeight();
-      var r = $("#" + elem).offset().top - i - 10;
-      matchMedia() && (r = $("#" + elem).offset().top - 10);
-      scrollT(r)
-    }
-
-    /set selected value and select operation (class) */
-    function setSelected(element) {
-      {
-        var nav = $(".sticky-nav [data-navigator]");
-        $("#" + element.attr("data-endpoint"))
-      }
-      nav.find("[data-resource]").removeClass("active");
-      nav.find("[data-selected]").removeAttr("data-selected");
-      element.closest("[data-resource]").addClass("active");
-      element.attr("data-selected", "");
-      $(".sticky-nav").find("[data-selected-value]").html(element.text())
-    }
-
-    /* update navigation */
-    function updateUrl(element) {
-      history.pushState && history.pushState(null, null, element)
-    }
-
-    function matchMedia() {
-      return window.matchMedia("(min-width: 992px)").matches
-    }
-
-    function scrollT(e) {
-      if ("self" === e) {
-        var n = $(window).scrollTop();
-        return $(window).scrollTop(n)
-      }
-
-      return $(window).scrollTop(e)
-    }
-  }
 
 });
 'use strict';

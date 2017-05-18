@@ -1,5 +1,11 @@
 # Swagger UI responsive theme
 
+Fork from https://github.com/jensoleg/swagger-ui.
+
+增加了过时资源标识.
+
+增加了多语言转换支持(部分字段,参考官方swagger-ui).
+
 With inspiration from the [Auth0 api explorer](https://auth0.com/docs/apiv2) the original Swagger UI repo is modified to use a responsive layout.
 
 [![Swagger Theme example](dist/images/Swagger_explorer.png)](http://ecs.bobbytech.dk/api)
